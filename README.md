@@ -36,7 +36,7 @@ There should be nothing to do on your end, it should "just work"
 ## Testing the "apply" command locally
 
 Right now there is one big integration test which simply
-checks that the files were created for Docker in a new bridgetown project.
+checks that the files were created for Turbolinks in a new bridgetown project.
 
 In order for the tests to pass, you must first push the branch you're working on and then
 wait for Github to update the raw file so the remote automation test will pass
