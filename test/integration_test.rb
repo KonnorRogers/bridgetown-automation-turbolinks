@@ -1,125 +1,59 @@
 # frozen_string_literal: true
 
 require 'test_helper'
-require 'open3'
 
-GITHUB_REPO_NAME = 'bridgetown-automation-docker-compose'
+GITHUB_REPO_NAME = 'bridgetown-automation-turbolinks'
 BRANCH = `git branch --show-current`.chomp.freeze || 'master'
 
-module DockerComposeAutomation
-  class IntegrationTest < Minitest::Test
-    def setup
-      Rake.rm_rf(TEST_APP)
-      Rake.mkdir_p(TEST_APP)
-    end
+class IntegrationTest < Minitest::Test
+  def setup
+    Rake.rm_rf(TEST_APP)
+    Rake.mkdir_p(TEST_APP)
+  end
 
-    def read_test_file(filename)
-      File.read(File.join(TEST_APP, filename))
-    end
+  def read_test_file(filename)
+    File.read(File.join(TEST_APP, filename))
+  end
 
-    def read_template_file(filename)
-      File.read(File.join(TEMPLATES_DIR, "#{filename}.tt"))
-    end
+  # If no block given, use the first input as the command
+  def run_command(*inputs)
+    cmd = yield if block_given? || inputs.shift!
 
-    # If no block given, use the first input as the command
-    def run_command(*inputs)
-      cmd = yield if block_given? || inputs.shift!
+    Open3.popen3(cmd) do |stdin, stdout, _stderr, wait_thr|
+      wait_thr.pid
 
-      Open3.popen3(cmd) do |stdin, stdout, _stderr, wait_thr|
-        wait_thr.pid
+      inputs.flatten.each { |input| stdin.puts(input) }
 
-        inputs.flatten.each { |input| stdin.puts(input) }
-
-        stdout.each_line do |line|
-          puts line
-        end
-
-        exit_status = wait_thr.value
+      stdout.each_line do |line|
+        puts line
       end
     end
+  end
 
-    def run_assertions(ruby_version:, distro:)
-      FILES.each do |file|
-        next if file == 'Dockerfile'
+  def run_assertions; end
 
-        test_file = read_test_file(file)
-        template_file = read_template_file(file)
-        assert_match test_file, template_file
-      end
+  def test_it_works_with_local_automation
+    Rake.cd TEST_APP
 
-      # Check if ruby version loaded properly
-      dockerfile = read_test_file('Dockerfile')
-      ruby_regex = /FROM ruby:(?<ruby_version>\d+\.\d+)/
-      dockerfile_ruby_version = dockerfile.match(ruby_regex)[:ruby_version]
-      assert_equal dockerfile_ruby_version, ruby_version
+    Rake.sh('bundle exec bridgetown new . --force --apply="../bridgetown.automation.rb"')
 
-      # Check if distro loaded properly
-      distro_regex = /#{ruby_regex}[- ](?<distro>\w+)\s+/
-      distro_match = dockerfile.match(distro_regex)
-      assert distro_match
+    run_assertions
+  end
 
-      # Use the match group, if it doesnt exist, it means its debian based.
-      docker_distro = dockerfile.match(distro_regex)[:distro].to_sym
-      docker_distro = :debian if docker_distro == 'as'
-      assert_equal(distro, docker_distro)
-    end
+  # Have to push to github first, and wait for github to update
+  def test_it_works_with_remote_automation
+    Rake.cd TEST_APP
 
-    def create_inputs(ruby_version:, distro:)
-      distros = Configuration::DISTROS.invert
-      ruby_versions = Configuration::DOCKER_RUBY_VERSIONS.invert
+    github_url = 'https://github.com'
+    user_and_reponame = "ParamagicDev/#{GITHUB_REPO_NAME}/tree/#{BRANCH}"
 
-      distro_input = distros[distro].to_s
-      ruby_version_input = ruby_versions[:"#{ruby_version}"].to_s
+    file = 'bridgetown.automation.rb'
 
-      { ruby_version: ruby_version_input, distro: distro_input }
-    end
+    url = "#{github_url}/#{user_and_reponame}/#{file}"
 
-    def test_it_works_with_local_automation
-      Rake.cd TEST_APP
+    Rake.sh('bundle exec bridgetown new . --force ')
+    Rake.sh("bridgetown apply #{url}")
 
-      Rake.sh('bundle exec bridgetown new . --force ')
-
-      distro = :alpine
-      ruby_version = '2.6'
-
-      inputs = create_inputs(distro: distro, ruby_version: ruby_version)
-
-      ruby_version_input = inputs[:ruby_version]
-      distro_input = inputs[:distro]
-
-      run_command(ruby_version_input, distro_input) do
-        'bridgetown apply ../bridgetown.automation.rb'
-      end
-
-      run_assertions(ruby_version: ruby_version, distro: distro)
-    end
-
-    # Have to push to github first, and wait for github to update
-    def test_it_works_with_remote_automation
-      Rake.cd TEST_APP
-
-      github_url = 'https://github.com'
-      user_and_reponame = "ParamagicDev/#{GITHUB_REPO_NAME}/tree/#{BRANCH}"
-
-      file = 'bridgetown.automation.rb'
-
-      url = "#{github_url}/#{user_and_reponame}/#{file}"
-
-      distro = :alpine
-      ruby_version = '2.6'
-
-      inputs = create_inputs(distro: distro, ruby_version: ruby_version)
-
-      ruby_version_input = inputs[:ruby_version]
-      distro_input = inputs[:distro]
-
-      Rake.sh('bundle exec bridgetown new . --force ')
-
-      run_command(ruby_version_input, distro_input) do
-        "bridgetown apply #{url}"
-      end
-
-      run_assertions(ruby_version: ruby_version, distro: distro)
-    end
+    run_assertions
   end
 end
