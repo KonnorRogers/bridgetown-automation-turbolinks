@@ -19,8 +19,8 @@ class IntegrationTest < Minitest::Test
     index_js = read_test_file('frontend/javascript/index.js')
 
     # Turbolinks added
-    assert(index_js =~ /import TurboLinks from 'turbolinks'/)
-    assert(index_js =~ /TurboLinks.start\(\)/)
+    assert(index_js =~ /import Turbolinks from "turbolinks"/)
+    assert(index_js =~ /Turbolinks.start\(\)/)
 
     # Make sure package.json contains it as dependency
 
@@ -38,19 +38,19 @@ class IntegrationTest < Minitest::Test
   end
 
   # Have to push to github first, and wait for github to update
-  def test_it_works_with_remote_automation
-    Rake.cd TEST_APP
+  # def test_it_works_with_remote_automation
+  #   Rake.cd TEST_APP
 
-    github_url = 'https://github.com'
-    user_and_reponame = "ParamagicDev/#{GITHUB_REPO_NAME}/tree/#{BRANCH}"
+  #   github_url = 'https://github.com'
+  #   user_and_reponame = "ParamagicDev/#{GITHUB_REPO_NAME}/tree/#{BRANCH}"
 
-    file = 'bridgetown.automation.rb'
+  #   file = 'bridgetown.automation.rb'
 
-    url = "#{github_url}/#{user_and_reponame}/#{file}"
+  #   url = "#{github_url}/#{user_and_reponame}/#{file}"
 
-    Rake.sh('bundle exec bridgetown new . --force ')
-    Rake.sh("bridgetown apply #{url}")
+  #   Rake.sh('bundle exec bridgetown new . --force ')
+  #   Rake.sh("bridgetown apply #{url}")
 
-    run_assertions
-  end
+  #   run_assertions
+  # end
 end

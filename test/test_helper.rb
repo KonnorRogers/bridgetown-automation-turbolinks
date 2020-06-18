@@ -15,6 +15,5 @@ reporter_options = { color: true, slow_count: 5}
 Minitest::Reporters.use!(
   [
     Minitest::Reporters::DefaultReporter.new(reporter_options),
-    Minitest::Reporters::ProgressReporter.new
   ]
 )

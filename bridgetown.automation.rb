@@ -8,7 +8,7 @@ say 'Adding Turbolinks to "frontend/javascript/index.js"', :magenta
 
 javascript_import do
   <<~JS
-    const Turbolinks = require("turbolinks")
+    import Turbolinks from "turbolinks"
   JS
 end
 
