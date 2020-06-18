@@ -1,8 +1,6 @@
-# CURRENTLY UNDER DEVELOPMENT
-
 # Purpose
 
-To provide an easy way for users to add Docker to their project.
+To provide an easy way for Bridgetown users to add Turnolinks to their project.
 
 ## Prerequisites
 
