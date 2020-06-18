@@ -15,22 +15,19 @@ class IntegrationTest < Minitest::Test
     File.read(File.join(TEST_APP, filename))
   end
 
-  # If no block given, use the first input as the command
-  def run_command(*inputs)
-    cmd = yield if block_given? || inputs.shift!
+  def run_assertions
+    index_js = read_test_file('frontend/javascript/index.js')
 
-    Open3.popen3(cmd) do |stdin, stdout, _stderr, wait_thr|
-      wait_thr.pid
+    # Turbolinks added
+    assert(index_js =~ /import TurboLinks from 'turbolinks'/)
+    assert(index_js =~ /TurboLinks.start\(\)/)
 
-      inputs.flatten.each { |input| stdin.puts(input) }
+    # Make sure package.json contains it as dependency
 
-      stdout.each_line do |line|
-        puts line
-      end
-    end
+    package_json = read_test_file('package.json')
+
+    assert(package_json =~ /turbolinks/)
   end
-
-  def run_assertions; end
 
   def test_it_works_with_local_automation
     Rake.cd TEST_APP
