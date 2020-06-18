@@ -1,6 +1,6 @@
 # Purpose
 
-To provide an easy way for Bridgetown users to add Turnolinks to their project.
+To provide an easy way for Bridgetown users to add Turbolinks to their project.
 
 ## Prerequisites
 
