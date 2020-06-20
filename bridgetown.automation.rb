@@ -2,7 +2,7 @@
 
 say 'Installing Turbolinks...', :green
 
-run('yarn add turbolinks')
+run('yarn add -D turbolinks')
 
 say 'Adding Turbolinks to "frontend/javascript/index.js"', :magenta
 
